@@ -6,8 +6,8 @@
     <title>🎆 全国花火博物館データベース</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
         .gradient-bg {
@@ -220,18 +220,15 @@
         // Firebase初期化（設定が入力されている場合のみ）
         let db = null;
         let useFirebase = false;
-            if (firebaseConfig.apiKey) {
-    try {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        db = firebase.firestore();
-        useFirebase = true;
-        console.log('Firebase接続成功：全員でデータを共有します');
-    } catch (error) {
-        console.log('Firebase接続失敗：ローカルストレージを使用します', error);
-        useFirebase = false;
-    }
+        if (firebaseConfig.apiKey) {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                useFirebase = true;
+                console.log('Firebase接続成功：全員でデータを共有します');
+            } catch (error) {
+                console.log('Firebase接続失敗：ローカルストレージを使用します', error);
+                useFirebase = false;
             }
         } else {
             console.log('Firebase未設定：ローカルストレージを使用します');
