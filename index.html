@@ -220,16 +220,18 @@
         // Firebase初期化（設定が入力されている場合のみ）
         let db = null;
         let useFirebase = false;
-        
-        if (firebaseConfig.apiKey) {
-            try {
-                firebase.initializeApp(firebaseConfig);
-db = firebase.firestore();
-                useFirebase = true;
-                console.log('Firebase接続成功：全員でデータを共有します');
-            } catch (error) {
-                console.log('Firebase接続失敗：ローカルストレージを使用します', error);
-                useFirebase = false;
+            if (firebaseConfig.apiKey) {
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        useFirebase = true;
+        console.log('Firebase接続成功：全員でデータを共有します');
+    } catch (error) {
+        console.log('Firebase接続失敗：ローカルストレージを使用します', error);
+        useFirebase = false;
+    }
             }
         } else {
             console.log('Firebase未設定：ローカルストレージを使用します');
