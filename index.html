@@ -6,8 +6,8 @@
     <title>🎆 全国花火博物館データベース</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
     <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
         .gradient-bg {
@@ -224,7 +224,7 @@
         if (firebaseConfig.apiKey) {
             try {
                 firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
+db = firebase.firestore();
                 useFirebase = true;
                 console.log('Firebase接続成功：全員でデータを共有します');
             } catch (error) {
