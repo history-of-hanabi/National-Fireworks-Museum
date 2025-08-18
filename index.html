@@ -217,22 +217,67 @@
             messagingSenderId: "796288605346",
             appId: "1:796288605346:web:b5f55c47c0f830bb454bfb"
         };
-        // Firebase初期化（設定が入力されている場合のみ）
+        // Firebase確実な初期化
         let db = null;
         let useFirebase = false;
-        if (firebaseConfig.apiKey) {
+        
+        // 初期化関数
+        function initializeFirebase() {
+            console.log('🔥 Firebase初期化開始');
+            
+            if (!window.firebase) {
+                console.log('❌ Firebase SDK未読み込み');
+                return false;
+            }
+            
+            if (!firebaseConfig || !firebaseConfig.apiKey) {
+                console.log('❌ Firebase設定なし');
+                return false;
+            }
+            
             try {
-                firebase.initializeApp(firebaseConfig);
+                // 既存アプリをチェック
+                if (firebase.apps.length === 0) {
+                    console.log('🚀 Firebaseアプリ初期化中...');
+                    firebase.initializeApp(firebaseConfig);
+                } else {
+                    console.log('♻️ 既存Firebaseアプリを使用');
+                }
+                
                 db = firebase.firestore();
                 useFirebase = true;
-                console.log('Firebase接続成功：全員でデータを共有します');
+                
+                console.log('🎉 Firebase接続成功：全員でデータを共有します');
+                console.log('📊 プロジェクトID:', firebaseConfig.projectId);
+                
+                return true;
             } catch (error) {
-                console.log('Firebase接続失敗：ローカルストレージを使用します', error);
+                console.log('💥 Firebase初期化エラー:', error);
+                console.log('📱 ローカルストレージモードで動作します');
                 useFirebase = false;
+                return false;
             }
-        } else {
-            console.log('Firebase未設定：ローカルストレージを使用します');
         }
+        
+        // ページ読み込み完了後に初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM読み込み完了');
+            
+            // Firebase初期化を少し遅らせる
+            setTimeout(function() {
+                const success = initializeFirebase();
+                
+                if (success) {
+                    console.log('✅ Firebaseモード: データを全員で共有');
+                } else {
+                    console.log('💻 ローカルストレージモード: 個人専用');
+                }
+                
+                // 既存の初期化処理を実行
+                updateFormState();
+                loadMuseums();
+            }, 1000); // 1秒待機
+        });
         // グローバル変数
         let selectedPrefecture = '';
         let museums = [];
