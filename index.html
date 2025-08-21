@@ -823,98 +823,122 @@
         }
 
         // 博物館データを読み込み
-        function loadMuseums() {
-            const listContainer = document.getElementById('museumList');
+async function loadMuseums() {
+    const listContainer = document.getElementById('museumList');
+    
+    if (!selectedPrefecture) {
+        listContainer.innerHTML = `
+            <div id="noSelection" class="text-center py-12">
+                <div class="text-purple-400 mb-4 text-6xl">🔍</div>
+                <p class="text-purple-600 text-lg">都道府県を選択して花火博物館を検索してください</p>
+                <p class="text-purple-400 text-sm mt-2">🎆 花火の歴史や技術を学べる施設を見つけよう！</p>
+            </div>
+        `;
+        return;
+    }
+    
+    try {
+        if (useFirebase && db) {
+            console.log('Firestoreからデータ読み込み中...');
+            const snapshot = await db.collection('museums')
+                .where('prefecture', '==', selectedPrefecture)
+                .orderBy('createdAt', 'desc')
+                .get();
             
-            if (!selectedPrefecture) {
-                listContainer.innerHTML = `
-                    <div id="noSelection" class="text-center py-12">
-                        <div class="text-purple-400 mb-4 text-6xl">🔍</div>
-                        <p class="text-purple-600 text-lg">都道府県を選択して花火博物館を検索してください</p>
-                        <p class="text-purple-400 text-sm mt-2">🎆 花火の歴史や技術を学べる施設を見つけよう！</p>
-                    </div>
-                `;
-                return;
-            }
-            
+            museums = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                museums.push({
+                    id: doc.id,
+                    ...data,
+                    createdAt: data.createdAt ? data.createdAt.toDate() : new Date()
+                });
+            });
+            console.log(`Firestoreから${museums.length}件読み込み`);
+        } else {
             museums = sampleMuseums[selectedPrefecture] || [];
+        }
+    } catch (error) {
+        console.error('データ読み込みエラー:', error);
+        museums = sampleMuseums[selectedPrefecture] || [];
+    }
+    
+    if (museums.length === 0) {
+        listContainer.innerHTML = `
+            <div class="text-center py-12">
+                <div class="text-purple-400 mb-4 text-6xl">📍</div>
+                <p class="text-purple-600 text-lg mb-2">
+                    🎆 ${selectedPrefecture}の花火博物館はまだ登録されていません
+                </p>
+                <p class="text-purple-400">
+                    この地域で花火展示のある博物館をご存知でしたら、ぜひ登録してください！
+                </p>
+            </div>
+        `;
+        return;
+    }
+    
+    const museumHTML = museums.map(museum => `
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 border-l-4 border-purple-400">
+            <div class="flex items-start justify-between mb-3">
+                <h3 class="text-lg font-semibold text-purple-800 flex-1">
+                    ${museum.homepage ? 
+                        `<a href="${museum.homepage}" target="_blank" rel="noopener noreferrer" class="text-purple-600 hover:text-purple-800 hover:underline flex items-center">
+                            🎆 ${museum.name}
+                            <svg class="w-4 h-4 ml-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                        </a>` : 
+                        `🎆 ${museum.name}`
+                    }
+                </h3>
+                <div class="flex space-x-2 ml-4">
+                    <button onclick="editMuseum('${museum.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded border border-blue-300 hover:bg-blue-50 transition-colors">
+                        ✏️ 編集
+                    </button>
+                    <button onclick="deleteMuseum('${museum.id}')" class="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 rounded border border-red-300 hover:bg-red-50 transition-colors">
+                        🗑️ 削除
+                    </button>
+                </div>
+            </div>
             
-            if (museums.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="text-center py-12">
-                        <div class="text-purple-400 mb-4 text-6xl">📍</div>
-                        <p class="text-purple-600 text-lg mb-2">
-                            🎆 ${selectedPrefecture}の花火博物館はまだ登録されていません
-                        </p>
-                        <p class="text-purple-400">
-                            この地域で花火展示のある博物館をご存知でしたら、ぜひ登録してください！
-                        </p>
-                    </div>
-                `;
-                return;
+            ${museum.description ? 
+                `<div class="bg-purple-50 p-3 rounded-lg mb-3 border border-purple-100">
+                    <p class="text-purple-800 leading-relaxed">
+                        <span class="font-medium">花火展示：</span>${museum.description}
+                    </p>
+                </div>` : ''
             }
             
-            const museumHTML = museums.map(museum => `
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 border-l-4 border-purple-400">
-                    <div class="flex items-start justify-between mb-3">
-                        <h3 class="text-lg font-semibold text-purple-800 flex-1">
-                            ${museum.homepage ? 
-                                `<a href="${museum.homepage}" target="_blank" rel="noopener noreferrer" class="text-purple-600 hover:text-purple-800 hover:underline flex items-center">
-                                    🎆 ${museum.name}
-                                    <svg class="w-4 h-4 ml-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                    </svg>
-                                </a>` : 
-                                `🎆 ${museum.name}`
-                            }
-                        </h3>
-                        <div class="flex space-x-2 ml-4">
-                            <button onclick="editMuseum('${museum.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded border border-blue-300 hover:bg-blue-50 transition-colors">
-                                ✏️ 編集
-                            </button>
-                            <button onclick="deleteMuseum('${museum.id}')" class="text-red-600 hover:text-red-800 text-sm font-medium px-2 py-1 rounded border border-red-300 hover:bg-red-50 transition-colors">
-                                🗑️ 削除
-                            </button>
-                        </div>
-                    </div>
-                    
-                    ${museum.description ? 
-                        `<div class="bg-purple-50 p-3 rounded-lg mb-3 border border-purple-100">
-                            <p class="text-purple-800 leading-relaxed">
-                                <span class="font-medium">花火展示：</span>${museum.description}
-                            </p>
-                        </div>` : ''
-                    }
-                    
-                    <div class="flex items-center justify-between text-sm text-purple-600">
-                        <span class="flex items-center">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-1a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                            登録者: ${museum.registeredBy}
-                        </span>
-                        <span>
-                            ${museum.createdAt.toLocaleDateString('ja-JP')}
-                        </span>
-                    </div>
-                </div>
-            `).join('');
-            
-            listContainer.innerHTML = `
-                <div>
-                    <h2 class="text-xl font-bold text-purple-800 mb-6 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        🎆 ${selectedPrefecture}の花火博物館 (${museums.length}件)
-                    </h2>
-                    <div class="space-y-4">
-                        ${museumHTML}
-                    </div>
-                </div>
-            `;
-        }
+            <div class="flex items-center justify-between text-sm text-purple-600">
+                <span class="flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-1a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    登録者: ${museum.registeredBy}
+                </span>
+                <span>
+                    ${museum.createdAt.toLocaleDateString('ja-JP')}
+                </span>
+            </div>
+        </div>
+    `).join('');
+    
+    listContainer.innerHTML = `
+        <div>
+            <h2 class="text-xl font-bold text-purple-800 mb-6 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                🎆 ${selectedPrefecture}の花火博物館 (${museums.length}件)
+            </h2>
+            <div class="space-y-4">
+                ${museumHTML}
+            </div>
+        </div>
+    `;
+}
 
         // 博物館を登録/更新
         function submitMuseum() {
