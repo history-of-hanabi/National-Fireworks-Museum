@@ -780,18 +780,18 @@
                 cancelEdit();
             }
         }
-        function handlePrefectureChange() {
-            const select = document.getElementById('prefecture');
-            const newPrefecture = select.value;
-            
-            if (newPrefecture && newPrefecture !== selectedPrefecture) {
-                triggerFireworks();
-            }
-            
-            selectedPrefecture = newPrefecture;
-            updateFormState();
-            loadMuseums();
-        }
+async function handlePrefectureChange() {
+    const select = document.getElementById('prefecture');
+    const newPrefecture = select.value;
+    
+    if (newPrefecture && newPrefecture !== selectedPrefecture) {
+        triggerFireworks();
+    }
+    
+    selectedPrefecture = newPrefecture;
+    updateFormState();
+    await loadMuseums();
+}
 
         // フォームの状態を更新
         function updateFormState() {
