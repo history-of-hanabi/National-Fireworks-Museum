@@ -979,22 +979,42 @@ async function loadMuseums() {
                     alert('🎆 博物館情報を更新しました！');
                 }
                 cancelEdit();
-            } else {
-                // 新規登録モード
-                const newMuseum = {
-                    id: selectedPrefecture + '_' + Date.now(),
-                    name: name,
-                    homepage: homepage || null,
-                    description: description || null,
-                    registeredBy: registeredBy,
-                    createdAt: new Date()
-                };
-                
-                sampleMuseums[selectedPrefecture].push(newMuseum);
-                alert('🎆 花火博物館情報を登録しました！');
-                
-                // 登録後はフォームを閉じる
-                toggleRegisterForm();
+} else {
+    // 新規登録モード
+    try {
+        if (useFirebase && db) {
+            const museumData = {
+                prefecture: selectedPrefecture,
+                name: name,
+                homepage: homepage || null,
+                description: description || null,
+                registeredBy: registeredBy,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection('museums').add(museumData);
+            console.log('Firestoreに博物館を登録完了');
+        } else {
+            if (!sampleMuseums[selectedPrefecture]) {
+                sampleMuseums[selectedPrefecture] = [];
+            }
+            const newMuseum = {
+                id: selectedPrefecture + '_' + Date.now(),
+                name: name,
+                homepage: homepage || null,
+                description: description || null,
+                registeredBy: registeredBy,
+                createdAt: new Date()
+            };
+            sampleMuseums[selectedPrefecture].push(newMuseum);
+        }
+        
+        alert('🎆 花火博物館情報を登録しました！');
+        toggleRegisterForm();
+        
+    } catch (error) {
+        console.error('登録エラー:', error);
+        alert('登録に失敗しました: ' + error.message);
+    }
             }
             
             // フォームをクリア
