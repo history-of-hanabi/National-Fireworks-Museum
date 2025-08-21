@@ -941,7 +941,7 @@ async function loadMuseums() {
 }
 
         // 博物館を登録/更新
-        function submitMuseum() {
+        async function submitMuseum() {
             const name = document.getElementById('museumName').value.trim();
             const homepage = document.getElementById('homepage').value.trim();
             const description = document.getElementById('description').value.trim();
